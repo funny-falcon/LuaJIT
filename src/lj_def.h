@@ -121,6 +121,7 @@ typedef unsigned int uintptr_t;
 /* A really naive Bloom filter. But sufficient for our needs. */
 typedef uintptr_t BloomFilter;
 #define BLOOM_MASK	(8*sizeof(BloomFilter) - 1)
+#define BLOOM_LOG       (sizeof(BloomFilter)==4?5:6)
 #define bloombit(x)	((uintptr_t)1 << ((x) & BLOOM_MASK))
 #define bloomset(b, x)	((b) |= bloombit((x)))
 #define bloomtest(b, x)	((b) & bloombit((x)))
@@ -237,6 +238,11 @@ typedef union __attribute__((packed)) Unaligned32 {
   uint8_t b[4];
 } Unaligned32;
 
+typedef union __attribute__((packed)) Unaligned64 {
+  uint64_t u;
+  uint8_t b[8];
+} Unaligned64;
+
 /* Unaligned load of uint16_t. */
 static LJ_AINLINE uint16_t lj_getu16(const void *p)
 {
@@ -247,6 +253,12 @@ static LJ_AINLINE uint16_t lj_getu16(const void *p)
 static LJ_AINLINE uint32_t lj_getu32(const void *p)
 {
   return ((const Unaligned32 *)p)->u;
+}
+
+/* Unaligned load of uint64_t. */
+static LJ_AINLINE uint64_t lj_getu64(const void *p)
+{
+  return ((const Unaligned64 *)p)->u;
 }
 
 #elif defined(_MSC_VER)
@@ -304,10 +316,16 @@ static LJ_AINLINE uint32_t lj_getu32(const void *v)
   const uint8_t *p = (const uint8_t *)v;
   return (uint32_t)((p[0]<<24) | (p[1]<<16) | (p[2]<<8) | p[3]);
 }
+static LJ_AINLINE uint64_t lj_getu64(const void *v)
+{
+  uint64_t l = (uint64_t)lj_getu32(v);
+  return (l << 32) | (uint64_t)lj_getu32(v+4);
+}
 #else
 /* Unaligned loads are generally ok on x86/x64. */
 #define lj_getu16(p)	(*(uint16_t *)(p))
 #define lj_getu32(p)	(*(uint32_t *)(p))
+#define lj_getu64(p)	(*(uint64_t *)(p))
 #endif
 
 #else
