@@ -15,6 +15,19 @@ LJ_FUNC int32_t LJ_FASTCALL lj_str_cmp(GCstr *a, GCstr *b);
 LJ_FUNC const char *lj_str_find(const char *s, const char *f,
 				MSize slen, MSize flen);
 LJ_FUNC int lj_str_haspattern(GCstr *s);
+/* small hash function for lj_cparse.c and lib_ffi.c */
+/* Bob Jenkins One-At-Time without finalizer */
+static LJ_AINLINE MSize lj_str_aot(GCstr* s)
+{
+  MSize h = 0, l = s->len;
+  const uint8_t* v = (const uint8_t*)strdata(s);
+  for (; l > 0; l--, v++) {
+    h += *v;
+    h += h << 10;
+    h ^= h >> 6;
+  }
+  return h;
+}
 
 /* String interning. */
 LJ_FUNC void lj_str_resize(lua_State *L, MSize newmask);
