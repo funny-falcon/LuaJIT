@@ -502,7 +502,7 @@ LUAJIT_T= luajit
 
 ALL_T= $(LUAJIT_T) $(LUAJIT_A) $(LUAJIT_SO) $(HOST_T)
 ALL_HDRGEN= lj_bcdef.h lj_ffdef.h lj_libdef.h lj_recdef.h lj_folddef.h \
-	    host/buildvm_arch.h
+	    host/buildvm_arch.h lj_known_strings.h
 ALL_GEN= $(LJVM_S) $(ALL_HDRGEN) $(LIB_VMDEFP)
 WIN_RM= *.obj *.lib *.exp *.dll *.exe *.manifest *.pdb *.ilk
 ALL_RM= $(ALL_T) $(ALL_GEN) *.o host/*.o $(WIN_RM)
@@ -640,6 +640,10 @@ $(BUILDVM_T): $(BUILDVM_O)
 $(LJVM_BOUT): $(BUILDVM_T)
 	$(E) "BUILDVM   $@"
 	$(Q)$(BUILDVM_X) -m $(LJVM_MODE) -o $@
+
+lj_known_strings.h: $(DASM_DEP) lj_cparse.c lib_ffi.c known_strings.lua
+	$(E) "CALCHASH  $@"
+	$(Q) cat lj_cparse.c lib_ffi.c | $(HOST_LUA) known_strings.lua > lj_known_strings.h
 
 lj_bcdef.h: $(BUILDVM_T) $(LJLIB_C)
 	$(E) "BUILDVM   $@"

@@ -30,6 +30,8 @@ if exist minilua.exe.manifest^
 @set DASMFLAGS=-D GPR64 -D FRAME32 -D PPE -D SQRT -D DUALNUM
 minilua %DASM% -LN %DASMFLAGS% -o host\buildvm_arch.h vm_ppc.dasc
 @if errorlevel 1 goto :BAD
+type lj_cparce.c lib_ffi.c | minilua known_strings.lua > lj_known_strings.h
+@if errorlevel 1 goto :BAD
 
 %LJCOMPILE% /I "." /I %DASMDIR% /D_XBOX_VER=200 /DLUAJIT_TARGET=LUAJIT_ARCH_PPC  host\buildvm*.c
 @if errorlevel 1 goto :BAD

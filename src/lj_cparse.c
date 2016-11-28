@@ -17,6 +17,7 @@
 #include "lj_char.h"
 #include "lj_strscan.h"
 #include "lj_strfmt.h"
+#include "lj_known_strings.h"
 
 /*
 ** Important note: this is NOT a validating C parser! This is a minimal
@@ -1057,44 +1058,44 @@ static void cp_decl_gccattribute(CPState *cp, CPDecl *decl)
     if (cp->tok == CTOK_IDENT) {
       GCstr *attrstr = cp->str;
       cp_next(cp);
-      switch (lj_str_aot(attrstr)) {
-      case 0x0b82061c: case 0xc339e6b8:  /* aligned */
+      switch (lj_ks(attrstr)) {
+      case LJ_KS_aligned: case LJ_KS___aligned__: /* aligned */
 	cp_decl_align(cp, decl);
 	break;
-      case 0x534be2c7: case 0x234bbfc3:  /* packed */
+      case LJ_KS_packed: case LJ_KS___packed__: /* packed */
 	decl->attr |= CTFP_PACKED;
 	break;
-      case 0x62dfa7e7: case 0x1e9cb746:  /* mode */
+      case LJ_KS_mode: case LJ_KS___mode__:  /* mode */
 	cp_decl_mode(cp, decl);
 	break;
-      case 0x33542249: case 0x98859fc6:  /* vector_size */
+      case LJ_KS_vector_size: case LJ_KS___vector_size__:  /* vector_size */
 	{
 	  CTSize vsize = cp_decl_sizeattr(cp);
 	  if (vsize) CTF_INSERT(decl->attr, VSIZEP, lj_fls(vsize));
 	}
 	break;
 #if LJ_TARGET_X86
-      case 0xe2cfcc74: case 0xade4611e:  /* regparm */
+      case LJ_KS_regparm: case LJ_KS___regparm__:  /* regparm */
 	CTF_INSERT(decl->fattr, REGPARM, cp_decl_sizeattr(cp));
 	decl->fattr |= CTFP_CCONV;
 	break;
-      case 0xc339f10e: case 0x7f845da3:  /* cdecl */
+      case LJ_KS_cdecl: case LJ_KS___cdecl__:  /* cdecl */
 	CTF_INSERT(decl->fattr, CCONV, CTCC_CDECL);
 	decl->fattr |= CTFP_CCONV;
 	break;
-      case 0xffb3ade5: case 0xf7527d91:  /* thiscall */
+      case LJ_KS_thiscall: case LJ_KS___thiscall__:  /* thiscall */
 	CTF_INSERT(decl->fattr, CCONV, CTCC_THISCALL);
 	decl->fattr |= CTFP_CCONV;
 	break;
-      case 0x1b4ef299: case 0x228a4d2e:  /* fastcall */
+      case LJ_KS_fastcall: case LJ_KS___fastcall__:  /* fastcall */
 	CTF_INSERT(decl->fattr, CCONV, CTCC_FASTCALL);
 	decl->fattr |= CTFP_CCONV;
 	break;
-      case 0x20196e41: case 0x5abe69ec:  /* stdcall */
+      case LJ_KS_stdcall: case LJ_KS___stdcall__:  /* stdcall */
 	CTF_INSERT(decl->fattr, CCONV, CTCC_STDCALL);
 	decl->fattr |= CTFP_CCONV;
 	break;
-      case 0x90174eb2: case 0x35643633:  /* sseregparm */
+      case LJ_KS_sseregparm: case LJ_KS___sseregparm__:  /* sseregparm */
 	decl->fattr |= CTF_SSEREGPARM;
 	decl->fattr |= CTFP_CCONV;
 	break;
@@ -1126,8 +1127,8 @@ static void cp_decl_msvcattribute(CPState *cp, CPDecl *decl)
   while (cp->tok == CTOK_IDENT) {
     GCstr *attrstr = cp->str;
     cp_next(cp);
-    switch (lj_str_aot(attrstr)) {
-    case 0xedfe1424:  /* align */
+    switch (lj_ks(attrstr)) {
+    case LJ_KS_align:
       cp_decl_align(cp, decl);
       break;
     default:  /* Ignore all other attributes. */
@@ -1716,17 +1717,17 @@ static void cp_pragma(CPState *cp, BCLine pragmaline)
 {
   cp_next(cp);
   if (cp->tok == CTOK_IDENT &&
-      lj_str_aot(cp->str) == 0x6dcb4d53)  {  /* pack */
+      lj_ks(cp->str) == LJ_KS_pack)  {  /* pack */
     cp_next(cp);
     cp_check(cp, '(');
     if (cp->tok == CTOK_IDENT) {
-      MSize hsh = lj_str_aot(cp->str);
-      if (hsh == 0x3f21b886) {  /* push */
+      MSize hsh = lj_ks(cp->str);
+      if (hsh == LJ_KS_push) {  /* push */
 	if (cp->curpack < CPARSE_MAX_PACKSTACK) {
 	  cp->packstack[cp->curpack+1] = cp->packstack[cp->curpack];
 	  cp->curpack++;
 	}
-      } else if (hsh == 0xfdb25292) {  /* pop */
+      } else if (hsh == LJ_KS_pop) {  /* pop */
 	if (cp->curpack > 0) cp->curpack--;
       } else {
 	cp_errmsg(cp, cp->tok, LJ_ERR_XSYMBOL);
@@ -1776,12 +1777,12 @@ static void cp_decl_multi(CPState *cp)
 	cp_line(cp, hashline);
 	continue;
       } else if (tok == CTOK_IDENT &&
-		 lj_str_aot(cp->str) == 0x63bedd3f) { /* line */
+		 lj_ks(cp->str) == LJ_KS_line) { /* line */
 	if (cp_next(cp) != CTOK_INTEGER) cp_err_token(cp, tok);
 	cp_line(cp, hashline);
 	continue;
       } else if (tok == CTOK_IDENT &&
-	  lj_str_aot(cp->str) == 0x9e0df65c) { /* pragma */
+	  lj_ks(cp->str) == LJ_KS_pragma) { /* pragma */
 	cp_pragma(cp, hashline);
 	continue;
       } else {

@@ -50,6 +50,8 @@ if exist minilua.exe.manifest^
 @set DASMFLAGS=-D P64 -D NO_UNWIND
 minilua %DASM% -LN %DASMFLAGS% -o host\buildvm_arch.h %DASC%
 @if errorlevel 1 goto :BAD
+type lj_cparce.c lib_ffi.c | minilua known_strings.lua > lj_known_strings.h
+@if errorlevel 1 goto :BAD
 
 %LJCOMPILE% /I "." /I %DASMDIR% %GC64% -DLUAJIT_TARGET=LUAJIT_ARCH_X64 -DLUAJIT_OS=LUAJIT_OS_OTHER -DLUAJIT_DISABLE_JIT -DLUAJIT_DISABLE_FFI -DLUAJIT_NO_UNWIND host\buildvm*.c
 @if errorlevel 1 goto :BAD

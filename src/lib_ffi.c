@@ -32,6 +32,7 @@
 #include "lj_strfmt.h"
 #include "lj_ff.h"
 #include "lj_lib.h"
+#include "lj_known_strings.h"
 
 /* -- C type checks ------------------------------------------------------- */
 
@@ -725,29 +726,29 @@ LJLIB_CF(ffi_abi)	LJLIB_REC(.)
 {
   GCstr *s = lj_lib_checkstr(L, 1);
   int b = 0;
-  switch (lj_str_aot(s)) {
+  switch (lj_ks(s)) {
 #if LJ_64
-  case 0xd702800e: b = 1; break;  /* 64bit */
+  case LJ_KS_64bit: b = 1; break;  /* 64bit */
 #else
-  case 0x2d409b87: b = 1; break;  /* 32bit */
+  case LJ_KS_32bit: b = 1; break;  /* 32bit */
 #endif
 #if LJ_ARCH_HASFPU
-  case 0x9281ef83: b = 1; break;  /* fpu */
+  case LJ_KS_fpu: b = 1; break;  /* fpu */
 #endif
 #if LJ_ABI_SOFTFP
-  case 0xb9061f55: b = 1; break;  /* softfp */
+  case LJ_KS_softfp: b = 1; break;  /* softfp */
 #else
-  case 0xdd142f00: b = 1; break;  /* hardfp */
+  case LJ_KS_hardfp: b = 1; break;  /* hardfp */
 #endif
 #if LJ_ABI_EABI
-  case 0x44ebd323: b = 1; break;  /* eabi */
+  case LJ_KS_eabi: b = 1; break;  /* eabi */
 #endif
 #if LJ_ABI_WIN
-  case 0xd358cb06: b = 1; break;  /* win */
+  case LJ_KS_win: b = 1; break;  /* win */
 #endif
-  case LJ_ENDIAN_SELECT(0x06c688ee, 0x0624de12): b = 1; break;  /* le/be */
+  case LJ_ENDIAN_SELECT(LJ_KS_le, LJ_KS_be): b = 1; break;  /* le/be */
 #if LJ_GC64
-  case 0xee8f3239: b = 1; break;  /* gc64 */
+  case LJ_KS_gc64: b = 1; break;  /* gc64 */
 #endif
   default:
     break;

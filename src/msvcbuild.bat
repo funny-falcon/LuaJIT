@@ -41,6 +41,8 @@ if exist minilua.exe.manifest^
 :X64
 minilua %DASM% -LN %DASMFLAGS% -o host\buildvm_arch.h vm_x86.dasc
 @if errorlevel 1 goto :BAD
+type lj_cparce.c lib_ffi.c | minilua known_strings.lua > lj_known_strings.h
+@if errorlevel 1 goto :BAD
 
 %LJCOMPILE% /I "." /I %DASMDIR% host\buildvm*.c
 @if errorlevel 1 goto :BAD
@@ -100,7 +102,7 @@ if exist luajit.exe.manifest^
 
 @del *.obj *.manifest minilua.exe buildvm.exe
 @del host\buildvm_arch.h
-@del lj_bcdef.h lj_ffdef.h lj_libdef.h lj_recdef.h lj_folddef.h
+@del lj_bcdef.h lj_ffdef.h lj_libdef.h lj_recdef.h lj_folddef.h lj_known_strings.h
 @echo.
 @echo === Successfully built LuaJIT for Windows/%LJARCH% ===
 
